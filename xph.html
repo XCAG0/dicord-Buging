@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة جلسات التهكير - XCORD</title>
+    <link rel="shortcut icon" href="https://cdn.discordapp.com/icons/988805037767680030/ac0cf1a352e353213bd9a7f8f3e2a4c8.webp?size=1024" type="image/x-icon">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        
+        :root {
+            --bg-dark: #0f0f19;
+            --card-bg: #1a1a2e;
+            --primary: #8A2BE2;
+            --primary-dark: #7126c0;
+            --primary-light: #9d52e8;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --accent: #00c2ff;
+            --danger: #ed4245;
+            --success: #3ba55d;
+            --border-radius: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #2d1a3f 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .logo {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px rgba(138, 43, 226, 0.5));
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        header h1 {
+            color: var(--text-primary);
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        main {
+            width: 100%;
+        }
+        
+        .card {
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25),
+                        0 0 20px rgba(138, 43, 226, 0.15),
+                        inset 0 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
+            width: 100%;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.1) 0%, transparent 60%);
+            z-index: -1;
+        }
+        
+        .card h2 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-size: 22px;
+            text-align: center;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .card h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 30%;
+            right: 30%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+        
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 15px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(138, 43, 226, 0.3);
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+        
+        button:hover::before {
+            left: 100%;
+        }
+        
+        .button-alt {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            margin-top: 10px;
+        }
+        
+        .button-alt:hover {
+            background-color: rgba(138, 43, 226, 0.1);
+        }
+        
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .session-code {
+            flex: 1;
+            padding: 15px;
+            background: rgba(15, 15, 25, 0.6);
+            border: 1px solid rgba(138, 43, 226, 0.4);
+            border-radius: 12px;
+            color: var(--primary-light);
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 2px;
+            direction: ltr;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .copy-button {
+            width: auto;
+            padding: 15px 20px;
+            background: rgba(138, 43, 226, 0.2);
+            border: 1px solid rgba(138, 43, 226, 0.4);
+            color: var(--primary-light);
+        }
+        
+        .copy-button:hover {
+            background: rgba(138, 43, 226, 0.3);
+        }
+        
+        .link-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .link-input {
+            flex: 1;
+            padding: 15px;
+            background: rgba(15, 15, 25, 0.6);
+            border: 1px solid rgba(138, 43, 226, 0.4);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            direction: ltr;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .success-message {
+            color: var(--success);
+            margin-top: 10px;
+            font-size: 16px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .success-message.show {
+            opacity: 1;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+            
+            .logo {
+                width: 100px;
+                height: 100px;
+            }
+            
+            header h1 {
+                font-size: 24px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .card h2 {
+                font-size: 18px;
+            }
+            
+            .session-code {
+                font-size: 16px;
+                padding: 12px;
+            }
+            
+            .copy-button {
+                padding: 12px 15px;
+            }
+            
+            .link-input {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+            
+            button {
+                padding: 12px 0;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="https://cdn.discordapp.com/icons/988805037767680030/ac0cf1a352e353213bd9a7f8f3e2a4c8.webp?size=1024" alt="XCORD Logo" class="logo">
+        
+        <header>
+            <h1>إدارة جلسات XCORD</h1>
+        </header>
+
+        <main>
+            <div class="card">
+                <h2>إنشاء جلسة جديدة</h2>
+                <div class="session-info hidden" id="sessionInfo">
+                    <div class="session-code" id="sessionCode"></div>
+                    <button class="copy-button" id="copySessionButton">نسخ</button>
+                </div>
+                <div class="link-container hidden" id="linkContainer">
+                    <input type="text" class="link-input" id="sessionLink" readonly>
+                    <button class="copy-button" id="copyLinkButton">نسخ</button>
+                </div>
+                <div class="success-message" id="copySuccess">تم النسخ بنجاح!</div>
+                <button id="createSessionButton">إنشاء جلسة جديدة</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDzdJHG0BhmEIR4WYBWPBuM9_rprmXcqa8",
+            authDomain: "xcago-cheat.firebaseapp.com",
+            databaseURL: "https://xcago-cheat-default-rtdb.firebaseio.com",
+            projectId: "xcago-cheat",
+            storageBucket: "xcago-cheat.firebasestorage.app",
+            messagingSenderId: "617002763147",
+            appId: "1:617002763147:web:89ac6e10467bd21120658e",
+            measurementId: "G-30DXX1MVQN"
+        };
+
+        // تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase();
+
+        // العناصر
+        const createSessionButton = document.getElementById('createSessionButton');
+        const sessionInfo = document.getElementById('sessionInfo');
+        const sessionCode = document.getElementById('sessionCode');
+        const copySessionButton = document.getElementById('copySessionButton');
+        const linkContainer = document.getElementById('linkContainer');
+        const sessionLink = document.getElementById('sessionLink');
+        const copyLinkButton = document.getElementById('copyLinkButton');
+        const copySuccess = document.getElementById('copySuccess');
+
+        // المتغيرات العامة
+        let currentSessionId = null;
+
+        // إنشاء معرف جلسة عشوائي
+        function generateSessionId(length = 6) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        // إنشاء جلسة جديدة
+        async function createSession() {
+            try {
+                createSessionButton.innerHTML = '<span class="loading"></span>جاري الإنشاء...';
+                createSessionButton.disabled = true;
+
+                const sessionId = generateSessionId();
+                console.log("تم إنشاء معرف جلسة:", sessionId);
+                
+                const sessionRef = ref(database, 'login/sessions/' + sessionId);
+                await set(sessionRef, {
+                    created: Date.now(),
+                    status: 'active',
+                    accounts: {}
+                });
+                
+                console.log("تم إنشاء الجلسة في قاعدة البيانات");
+
+                currentSessionId = sessionId;
+                sessionCode.textContent = sessionId;
+                sessionInfo.classList.remove('hidden');
+
+                // إنشاء رابط الجلسة
+                const baseUrl = window.location.origin + window.location.pathname.replace('xph.html', 'index.html');
+                const fullLink = `${baseUrl}?session=${sessionId}`;
+                sessionLink.value = fullLink;
+                linkContainer.classList.remove('hidden');
+
+                createSessionButton.innerHTML = 'إنشاء جلسة جديدة';
+                createSessionButton.disabled = false;
+            } catch (error) {
+                console.error("Error creating session:", error);
+                createSessionButton.innerHTML = 'إنشاء جلسة جديدة';
+                createSessionButton.disabled = false;
+                alert('حدث خطأ أثناء إنشاء الجلسة. الرجاء المحاولة مرة أخرى.');
+            }
+        }
+
+        // نسخ النص إلى الحافظة
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            copySuccess.classList.add('show');
+            setTimeout(() => {
+                copySuccess.classList.remove('show');
+            }, 2000);
+        }
+
+        // الأحداث
+        createSessionButton.addEventListener('click', createSession);
+        copySessionButton.addEventListener('click', () => copyToClipboard(sessionCode.textContent));
+        copyLinkButton.addEventListener('click', () => copyToClipboard(sessionLink.value));
+
+        // منع القائمة المنسدلة عند النقر بزر الماوس الأيمن
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html> 
