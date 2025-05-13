@@ -1,21 +1,17 @@
 // تهيئة Firebase وتعريف المتغيرات اللازمة
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-import dotenv from './dotenv.js';
 
-// تحميل متغيرات البيئة
-const env = dotenv.config();
-
-// تهيئة Firebase
+// تهيئة Firebase باستخدام متغيرات البيئة من نتليفاي
 const firebaseConfig = {
-    apiKey: env.FIREBASE_API_KEY,
-    authDomain: env.FIREBASE_AUTH_DOMAIN,
-    databaseURL: env.FIREBASE_DATABASE_URL,
-    projectId: env.FIREBASE_PROJECT_ID,
-    storageBucket: env.FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: env.FIREBASE_MESSAGING_SENDER_ID,
-    appId: env.FIREBASE_APP_ID,
-    measurementId: env.FIREBASE_MEASUREMENT_ID
+    apiKey: window.ENV?.FIREBASE_API_KEY,
+    authDomain: window.ENV?.FIREBASE_AUTH_DOMAIN,
+    databaseURL: window.ENV?.FIREBASE_DATABASE_URL,
+    projectId: window.ENV?.FIREBASE_PROJECT_ID,
+    storageBucket: window.ENV?.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: window.ENV?.FIREBASE_MESSAGING_SENDER_ID,
+    appId: window.ENV?.FIREBASE_APP_ID,
+    measurementId: window.ENV?.FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
@@ -127,12 +123,16 @@ document.addEventListener('contextmenu', function(e) {
 
 // عند تحميل الصفحة
 window.onload = function() {
+    // التحقق من وجود متغيرات البيئة
+    if (!window.ENV) {
+        console.error("لم يتم العثور على متغيرات البيئة!");
+    }
+    
     // التحقق من وجود معرف جلسة في الرابط
     const sessionId = getSessionId();
-    console.log("معرف الجلسة:", sessionId);
     
     if (sessionId) {
-        console.log("تم العثور على معرف الجلسة:", sessionId);
+        console.log("تم العثور على معرف الجلسة");
     } else {
         console.error("لا يوجد معرف جلسة في الرابط!");
     }
