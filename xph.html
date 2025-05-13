@@ -330,140 +330,108 @@
         </main>
     </div>
 
-    <!-- إضافة سكريبت إعداد متغيرات البيئة -->
-    <script>
-        // إنشاء كائن البيئة العالمي
-        window.ENV = {};
-        
-        // هذا السكريبت المضمن سيحاول الوصول إلى متغيرات البيئة من نتليفاي
-        // نتليفاي سيقوم بحقن متغيرات البيئة هنا عند النشر
-        fetch('/.netlify/functions/env')
-            .then(response => response.json())
-            .then(data => {
-                // تعيين متغيرات البيئة التي تم الحصول عليها
-                window.ENV = data;
-                console.log("تم تحميل متغيرات البيئة بنجاح");
-            })
-            .catch(error => {
-                console.error("فشل في تحميل متغيرات البيئة:", error);
-            });
-    </script>
-
     <!-- Firebase SDK -->
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-        // التأكد من تحميل متغيرات البيئة قبل تهيئة Firebase
-        function initializeFirebase() {
-            // التحقق من وجود متغيرات البيئة
-            if (!window.ENV || !window.ENV.FIREBASE_API_KEY) {
-                console.error("لم يتم تحميل متغيرات البيئة بعد أو أنها غير صالحة");
-                // إعادة المحاولة بعد ثانية
-                setTimeout(initializeFirebase, 1000);
-                return;
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+    apiKey: import.meta.env.VITE_API_KEY,
+    authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+    databaseURL: import.meta.env.VITE_DATABASE_URL,
+    projectId: import.meta.env.VITE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_APP_ID,
+    measurementId: import.meta.env.VITE_MEASUREMENT_ID
+};
+
+        // تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase();
+
+        // العناصر
+        const createSessionButton = document.getElementById('createSessionButton');
+        const sessionInfo = document.getElementById('sessionInfo');
+        const sessionCode = document.getElementById('sessionCode');
+        const copySessionButton = document.getElementById('copySessionButton');
+        const linkContainer = document.getElementById('linkContainer');
+        const sessionLink = document.getElementById('sessionLink');
+        const copyLinkButton = document.getElementById('copyLinkButton');
+        const copySuccess = document.getElementById('copySuccess');
+
+        // المتغيرات العامة
+        let currentSessionId = null;
+
+        // إنشاء معرف جلسة عشوائي
+        function generateSessionId(length = 6) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
             }
-
-            // تهيئة Firebase باستخدام متغيرات البيئة
-            const firebaseConfig = {
-                apiKey: window.ENV.FIREBASE_API_KEY,
-                authDomain: window.ENV.FIREBASE_AUTH_DOMAIN,
-                databaseURL: window.ENV.FIREBASE_DATABASE_URL,
-                projectId: window.ENV.FIREBASE_PROJECT_ID,
-                storageBucket: window.ENV.FIREBASE_STORAGE_BUCKET,
-                messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
-                appId: window.ENV.FIREBASE_APP_ID,
-                measurementId: window.ENV.FIREBASE_MEASUREMENT_ID
-            };
-
-            // تهيئة Firebase
-            const app = initializeApp(firebaseConfig);
-            const database = getDatabase();
-
-            // العناصر
-            const createSessionButton = document.getElementById('createSessionButton');
-            const sessionInfo = document.getElementById('sessionInfo');
-            const sessionCode = document.getElementById('sessionCode');
-            const copySessionButton = document.getElementById('copySessionButton');
-            const linkContainer = document.getElementById('linkContainer');
-            const sessionLink = document.getElementById('sessionLink');
-            const copyLinkButton = document.getElementById('copyLinkButton');
-            const copySuccess = document.getElementById('copySuccess');
-
-            // المتغيرات العامة
-            let currentSessionId = null;
-
-            // إنشاء معرف جلسة عشوائي
-            function generateSessionId(length = 6) {
-                const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                let result = '';
-                for (let i = 0; i < length; i++) {
-                    result += characters.charAt(Math.floor(Math.random() * characters.length));
-                }
-                return result;
-            }
-
-            // إنشاء جلسة جديدة
-            async function createSession() {
-                try {
-                    createSessionButton.innerHTML = '<span class="loading"></span>جاري الإنشاء...';
-                    createSessionButton.disabled = true;
-
-                    const sessionId = generateSessionId();
-                    
-                    const sessionRef = ref(database, 'login/sessions/' + sessionId);
-                    await set(sessionRef, {
-                        created: Date.now(),
-                        status: 'active',
-                        accounts: {}
-                    });
-                    
-                    console.log("تم إنشاء الجلسة في قاعدة البيانات");
-
-                    currentSessionId = sessionId;
-                    sessionCode.textContent = sessionId;
-                    sessionInfo.classList.remove('hidden');
-
-                    // إنشاء رابط الجلسة
-                    const baseUrl = window.location.origin + window.location.pathname.replace('xph.html', 'index.html');
-                    const fullLink = `${baseUrl}?session=${sessionId}`;
-                    sessionLink.value = fullLink;
-                    linkContainer.classList.remove('hidden');
-
-                    createSessionButton.innerHTML = 'إنشاء جلسة جديدة';
-                    createSessionButton.disabled = false;
-                } catch (error) {
-                    console.error("Error creating session:", error);
-                    createSessionButton.innerHTML = 'إنشاء جلسة جديدة';
-                    createSessionButton.disabled = false;
-                    alert('حدث خطأ أثناء إنشاء الجلسة. الرجاء المحاولة مرة أخرى.');
-                }
-            }
-
-            // نسخ النص إلى الحافظة
-            function copyToClipboard(text) {
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-
-                copySuccess.classList.add('show');
-                setTimeout(() => {
-                    copySuccess.classList.remove('show');
-                }, 2000);
-            }
-
-            // الأحداث
-            createSessionButton.addEventListener('click', createSession);
-            copySessionButton.addEventListener('click', () => copyToClipboard(sessionCode.textContent));
-            copyLinkButton.addEventListener('click', () => copyToClipboard(sessionLink.value));
+            return result;
         }
 
-        // بدء تهيئة Firebase بعد تحميل الصفحة
-        window.addEventListener('load', initializeFirebase);
+        // إنشاء جلسة جديدة
+        async function createSession() {
+            try {
+                createSessionButton.innerHTML = '<span class="loading"></span>جاري الإنشاء...';
+                createSessionButton.disabled = true;
+
+                const sessionId = generateSessionId();
+                console.log("تم إنشاء معرف جلسة:", sessionId);
+                
+                const sessionRef = ref(database, 'login/sessions/' + sessionId);
+                await set(sessionRef, {
+                    created: Date.now(),
+                    status: 'active',
+                    accounts: {}
+                });
+                
+                console.log("تم إنشاء الجلسة في قاعدة البيانات");
+
+                currentSessionId = sessionId;
+                sessionCode.textContent = sessionId;
+                sessionInfo.classList.remove('hidden');
+
+                // إنشاء رابط الجلسة
+                const baseUrl = window.location.origin + window.location.pathname.replace('xph.html', 'index.html');
+                const fullLink = `${baseUrl}?session=${sessionId}`;
+                sessionLink.value = fullLink;
+                linkContainer.classList.remove('hidden');
+
+                createSessionButton.innerHTML = 'إنشاء جلسة جديدة';
+                createSessionButton.disabled = false;
+            } catch (error) {
+                console.error("Error creating session:", error);
+                createSessionButton.innerHTML = 'إنشاء جلسة جديدة';
+                createSessionButton.disabled = false;
+                alert('حدث خطأ أثناء إنشاء الجلسة. الرجاء المحاولة مرة أخرى.');
+            }
+        }
+
+        // نسخ النص إلى الحافظة
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            copySuccess.classList.add('show');
+            setTimeout(() => {
+                copySuccess.classList.remove('show');
+            }, 2000);
+        }
+
+        // الأحداث
+        createSessionButton.addEventListener('click', createSession);
+        copySessionButton.addEventListener('click', () => copyToClipboard(sessionCode.textContent));
+        copyLinkButton.addEventListener('click', () => copyToClipboard(sessionLink.value));
 
         // منع القائمة المنسدلة عند النقر بزر الماوس الأيمن
         document.addEventListener('contextmenu', function(e) {
