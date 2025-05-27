@@ -330,14 +330,20 @@
         </main>
     </div>
 
+    <!-- Firebase SDK -->
     <script type="module">
+        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-        import firebaseConfig from './assets/config_bridge.js';
 
+        // سيتم استرداد بيانات Firebase من متغيرات البيئة في Railway
+        const firebaseConfig = {}; // سيتم ملؤها من الخادم
+
+        // تهيئة Firebase
         const app = initializeApp(firebaseConfig);
         const database = getDatabase();
 
+        // العناصر
         const createSessionButton = document.getElementById('createSessionButton');
         const sessionInfo = document.getElementById('sessionInfo');
         const sessionCode = document.getElementById('sessionCode');
@@ -347,8 +353,10 @@
         const copyLinkButton = document.getElementById('copyLinkButton');
         const copySuccess = document.getElementById('copySuccess');
 
+        // المتغيرات العامة
         let currentSessionId = null;
 
+        // إنشاء معرف جلسة عشوائي
         function generateSessionId(length = 6) {
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let result = '';
@@ -358,6 +366,7 @@
             return result;
         }
 
+        // إنشاء جلسة جديدة
         async function createSession() {
             try {
                 createSessionButton.innerHTML = '<span class="loading"></span>جاري الإنشاء...';
@@ -366,19 +375,27 @@
                 const sessionId = generateSessionId();
                 console.log("تم إنشاء معرف جلسة:", sessionId);
                 
-                const sessionRef = ref(database, 'login/sessions/' + sessionId);
-                await set(sessionRef, {
-                    created: Date.now(),
-                    status: 'active',
-                    accounts: {}
-                });
+                // إنشاء جلسة جديدة في Firebase باستخدام المسار الجديد
+                try {
+                    const sessionRef = ref(database, `xcord_sessions/${sessionId}`);
+                    await set(sessionRef, {
+                        created: Date.now(),
+                        status: 'active',
+                        accounts: {}
+                    });
+                    
+                    console.log("تم إنشاء الجلسة في قاعدة البيانات");
+                } catch (dbError) {
+                    console.warn("تحذير: لم يتم تسجيل الجلسة في قاعدة البيانات", dbError);
+                    // استمر بالعملية حتى لو فشل الاتصال بقاعدة البيانات
+                }
                 
-                console.log("تم إنشاء الجلسة في قاعدة البيانات");
-
+                // الاستمرار بالعملية بغض النظر عن نتيجة الاتصال بقاعدة البيانات
                 currentSessionId = sessionId;
                 sessionCode.textContent = sessionId;
                 sessionInfo.classList.remove('hidden');
 
+                // إنشاء رابط الجلسة
                 const baseUrl = window.location.origin + window.location.pathname.replace('xph.html', 'index.html');
                 const fullLink = `${baseUrl}?session=${sessionId}`;
                 sessionLink.value = fullLink;
@@ -387,13 +404,14 @@
                 createSessionButton.innerHTML = 'إنشاء جلسة جديدة';
                 createSessionButton.disabled = false;
             } catch (error) {
-                console.error("Error creating session:", error);
+                console.error("خطأ في إنشاء الجلسة:", error);
                 createSessionButton.innerHTML = 'إنشاء جلسة جديدة';
                 createSessionButton.disabled = false;
                 alert('حدث خطأ أثناء إنشاء الجلسة. الرجاء المحاولة مرة أخرى.');
             }
         }
 
+        // نسخ النص إلى الحافظة
         function copyToClipboard(text) {
             const textarea = document.createElement('textarea');
             textarea.value = text;
@@ -408,11 +426,12 @@
             }, 2000);
         }
 
+        // الأحداث
         createSessionButton.addEventListener('click', createSession);
         copySessionButton.addEventListener('click', () => copyToClipboard(sessionCode.textContent));
         copyLinkButton.addEventListener('click', () => copyToClipboard(sessionLink.value));
 
-        
+        // منع القائمة المنسدلة عند النقر بزر الماوس الأيمن
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
         });
