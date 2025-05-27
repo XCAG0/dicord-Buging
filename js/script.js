@@ -1,7 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-import firebaseConfig from '../assets/config_bridge.js';
 
+// سيتم استرداد بيانات Firebase من متغيرات البيئة في Railway
+const firebaseConfig = {}; // سيتم ملؤها من الخادم
 
 const app = initializeApp(firebaseConfig);
 const database = getDatabase();
