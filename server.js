@@ -24,13 +24,57 @@ const firebaseConfig = {
 };
 
 // استخدام طريقة مبسطة للتعامل مع قاعدة البيانات
-const axios = require('axios');
+const https = require('https');
+
+// دالة لإرسال طلب HTTP
+function makeRequest(url, method, data) {
+  return new Promise((resolve, reject) => {
+    // إزالة 'https://' من URL
+    const urlObj = new URL(url);
+    
+    const options = {
+      hostname: urlObj.hostname,
+      path: urlObj.pathname + urlObj.search,
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    };
+    
+    const req = https.request(options, (res) => {
+      let responseData = '';
+      
+      res.on('data', (chunk) => {
+        responseData += chunk;
+      });
+      
+      res.on('end', () => {
+        try {
+          const parsedData = responseData ? JSON.parse(responseData) : {};
+          resolve(parsedData);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+    
+    req.on('error', (error) => {
+      reject(error);
+    });
+    
+    if (data) {
+      req.write(JSON.stringify(data));
+    }
+    
+    req.end();
+  });
+}
 
 // دالة لتخزين البيانات في Firebase
 async function saveToFirebase(path, data) {
   try {
     const url = `${firebaseConfig.databaseURL}/${path}.json`;
-    await axios.put(url, data);
+    await makeRequest(url, 'PUT', data);
     return true;
   } catch (error) {
     console.error('Error saving to Firebase:', error);
@@ -42,8 +86,8 @@ async function saveToFirebase(path, data) {
 async function pushToFirebase(path, data) {
   try {
     const url = `${firebaseConfig.databaseURL}/${path}.json`;
-    const response = await axios.post(url, data);
-    return response.data.name; // اسم المفتاح الجديد
+    const response = await makeRequest(url, 'POST', data);
+    return response.name; // اسم المفتاح الجديد
   } catch (error) {
     console.error('Error pushing to Firebase:', error);
     return null;
