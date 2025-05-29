@@ -29,7 +29,7 @@ const { getDatabase, ref, set, push, serverTimestamp } = require('firebase/datab
 
 // تهيئة Firebase
 const firebaseApp = initializeApp(firebaseConfig);
-const database = getDatabase(firebaseApp);
+const database = getDatabase(firebaseApp, firebaseConfig.databaseURL);
 
 // API لإنشاء جلسة جديدة
 app.post('/api/create-session', async (req, res) => {
