@@ -1,6 +1,7 @@
 {
-  "name": "xcord-web",
+  "name": "dicord-web",
   "compatibility_date": "2025-05-30",
+  "compatibility_flags": ["nodejs_compat"],
   "main": "server.js",
   "env": {
     "production": {
