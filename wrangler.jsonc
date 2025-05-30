@@ -1,0 +1,10 @@
+{
+  "name": "xcord-web",
+  "compatibility_date": "2025-05-30",
+  "main": "server.js",
+  "env": {
+    "production": {
+      "vars": {}
+    }
+  }
+}
