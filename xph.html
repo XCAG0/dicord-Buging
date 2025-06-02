@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> عمل جلسات  - XCORD</title>
-    <link rel="shortcut icon" href="https://cdn.discordapp.com/icons/988805037767680030/ac0cf1a352e353213bd9a7f8f3e2a4c8.webp?size=1024" type="image/x-icon">
+    <meta name="referrer" content="no-referrer">
+    <meta name="robots" content="noindex, nofollow">
+    <title>إنشاء جلسة جديدة</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
         
@@ -331,107 +333,160 @@
     </div>
 
     <script>
+        // منع فتح أدوات المطور
+        document.addEventListener('keydown', function(e) {
+            // منع F12
+            if (e.keyCode === 123) {
+                e.preventDefault();
+            }
+            
+            // منع Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C
+            if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
+                e.preventDefault();
+            }
+        });
 
-        // العناصر
-        const createSessionButton = document.getElementById('createSessionButton');
-        const sessionInfo = document.getElementById('sessionInfo');
-        const sessionCode = document.getElementById('sessionCode');
-        const copySessionButton = document.getElementById('copySessionButton');
-        const linkContainer = document.getElementById('linkContainer');
-        const sessionLink = document.getElementById('sessionLink');
-        const copyLinkButton = document.getElementById('copyLinkButton');
-        const copySuccess = document.getElementById('copySuccess');
+        // العناصر - استخدام أسماء متغيرات مشفرة
+        const _xc_btn = document.getElementById('createSessionButton');
+        const _xc_info = document.getElementById('sessionInfo');
+        const _xc_code = document.getElementById('sessionCode');
+        const _xc_copy_btn = document.getElementById('copySessionButton');
+        const _xc_link_cont = document.getElementById('linkContainer');
+        const _xc_link = document.getElementById('sessionLink');
+        const _xc_copy_link = document.getElementById('copyLinkButton');
+        const _xc_success = document.getElementById('copySuccess');
 
         // المتغيرات العامة
-        let currentSessionId = null;
+        let _xc_sid = null;
 
-        // إنشاء معرف جلسة عشوائي
-        function generateSessionId(length = 6) {
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let result = '';
+        // إنشاء معرف جلسة عشوائي - بطريقة مشفرة
+        function _xc_gen(length = 6) {
+            const _chars = atob('QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMTIzNDU2Nzg5'); // تشفير الأحرف
+            let _res = '';
             for (let i = 0; i < length; i++) {
-                result += characters.charAt(Math.floor(Math.random() * characters.length));
+                _res += _chars.charAt(Math.floor(Math.random() * _chars.length));
             }
-            return result;
+            return _res;
         }
 
-        // إنشاء جلسة جديدة
-        async function createSession() {
+        // إنشاء جلسة جديدة - بطريقة مشفرة
+        async function _xc_create() {
             try {
-                createSessionButton.innerHTML = '<span class="loading"></span>جاري الإنشاء...';
-                createSessionButton.disabled = true;
+                _xc_btn.innerHTML = '<span class="loading"></span>جاري الإنشاء...';
+                _xc_btn.disabled = true;
 
-                const sessionId = generateSessionId();
-                console.log("تم إنشاء معرف جلسة:", sessionId);
+                const _sid = _xc_gen(8); // زيادة طول معرف الجلسة للأمان
                 
                 // إنشاء جلسة جديدة باستخدام واجهة API
                 try {
-                    const response = await fetch('/api/create-session', {
+                    // إضافة معلومات أمان إضافية
+                    const _sec_token = btoa(navigator.userAgent + ':' + Date.now());
+                    
+                    const _resp = await fetch('/api/create-session', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-Security-Token': _sec_token
                         },
                         body: JSON.stringify({
-                            sessionId: sessionId
+                            sessionId: _sid,
+                            timestamp: Date.now(),
+                            device: navigator.userAgent
                         })
                     });
                     
-                    const result = await response.json();
+                    const _result = await _resp.json();
                     
-                    if (result.success) {
-                        console.log("تم إنشاء الجلسة في قاعدة البيانات");
+                    if (_result.success) {
+                        // نجاح العملية - لا نطبع أي شيء في وحدة التحكم
                     } else {
-                        console.warn("تحذير: لم يتم إنشاء الجلسة", result.error);
+                        // فشل العملية - لا نطبع أي شيء في وحدة التحكم
                     }
-                } catch (error) {
-                    console.warn("تحذير: لم يتم إنشاء الجلسة", error);
+                } catch (_err) {
                     // استمر بالعملية حتى لو فشل الاتصال بقاعدة البيانات
                 }
                 
                 // الاستمرار بالعملية بغض النظر عن نتيجة الاتصال بقاعدة البيانات
-                currentSessionId = sessionId;
-                sessionCode.textContent = sessionId;
-                sessionInfo.classList.remove('hidden');
+                _xc_sid = _sid;
+                _xc_code.textContent = _sid;
+                _xc_info.classList.remove('hidden');
 
-                // إنشاء رابط الجلسة
-                const baseUrl = window.location.origin + window.location.pathname.replace('xph.html', 'index.html');
-                const fullLink = `${baseUrl}?session=${sessionId}`;
-                sessionLink.value = fullLink;
-                linkContainer.classList.remove('hidden');
+                // إنشاء رابط الجلسة بطريقة مشفرة
+                const _base = window.location.origin + window.location.pathname.replace('xph.html', 'index.html');
+                const _param = atob('c2Vzc2lvbg=='); // session مشفرة
+                const _full = `${_base}?${_param}=${_sid}`;
+                _xc_link.value = _full;
+                _xc_link_cont.classList.remove('hidden');
 
-                createSessionButton.innerHTML = 'إنشاء جلسة جديدة';
-                createSessionButton.disabled = false;
-            } catch (error) {
-                console.error("خطأ في إنشاء الجلسة:", error);
-                createSessionButton.innerHTML = 'إنشاء جلسة جديدة';
-                createSessionButton.disabled = false;
+                _xc_btn.innerHTML = 'إنشاء جلسة جديدة';
+                _xc_btn.disabled = false;
+            } catch (_err) {
+                _xc_btn.innerHTML = 'إنشاء جلسة جديدة';
+                _xc_btn.disabled = false;
                 alert('حدث خطأ أثناء إنشاء الجلسة. الرجاء المحاولة مرة أخرى.');
             }
         }
 
-        // نسخ النص إلى الحافظة
-        function copyToClipboard(text) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
+        // نسخ النص إلى الحافظة - بطريقة مشفرة
+        function _xc_copy(_txt) {
+            try {
+                // استخدام واجهة برمجة التطبيقات الحديثة للنسخ إذا كانت متوفرة
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(_txt);
+                    _xc_success.classList.add('show');
+                    setTimeout(() => {
+                        _xc_success.classList.remove('show');
+                    }, 2000);
+                    return;
+                }
+                
+                // الطريقة البديلة للمتصفحات القديمة
+                const _ta = document.createElement('textarea');
+                _ta.value = _txt;
+                _ta.style.position = 'fixed';
+                _ta.style.opacity = '0';
+                document.body.appendChild(_ta);
+                _ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(_ta);
 
-            copySuccess.classList.add('show');
-            setTimeout(() => {
-                copySuccess.classList.remove('show');
-            }, 2000);
+                _xc_success.classList.add('show');
+                setTimeout(() => {
+                    _xc_success.classList.remove('show');
+                }, 2000);
+            } catch (_err) {
+                alert('حدث خطأ أثناء محاولة النسخ');
+            }
         }
 
-        // الأحداث
-        createSessionButton.addEventListener('click', createSession);
-        copySessionButton.addEventListener('click', () => copyToClipboard(sessionCode.textContent));
-        copyLinkButton.addEventListener('click', () => copyToClipboard(sessionLink.value));
+        // الأحداث - بطريقة مشفرة
+        _xc_btn.addEventListener('click', _xc_create);
+        _xc_copy_btn.addEventListener('click', () => _xc_copy(_xc_code.textContent));
+        _xc_copy_link.addEventListener('click', () => _xc_copy(_xc_link.value));
 
         // منع القائمة المنسدلة عند النقر بزر الماوس الأيمن
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
+        });
+        
+        // منع التحديد والنسخ
+        document.addEventListener('selectstart', function(e) {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        });
+        
+        // منع السحب والإفلات
+        document.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+        });
+        
+        // منع النسخ
+        document.addEventListener('copy', function(e) {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
         });
     </script>
 </body>
